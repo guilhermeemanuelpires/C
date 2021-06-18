@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<clientes>
+    <cliente codigo="1" nome="Guilherme Pires" cartao="TESTE" ativo="1"/>
+    <cliente codigo="2" nome="Eduardo" cartao="51321321" ativo="1"/>
+    <cliente codigo="3" nome="Maria" cartao="51321321" ativo="1"/>
+    <cliente codigo="4" nome="Jose" cartao="51321321" ativo="1"/>
+    <cliente codigo="5" nome="Frederico" cartao="51321321" ativo="1"/>
+    <cliente codigo="6" nome="Felipe" cartao="51321321" ativo="1"/>
+    <cliente codigo="7" nome="Maria" cartao="51321321" ativo="1"/>
+    <cliente codigo="8" nome="Querido" cartao="51321321" ativo="1"/>
+</clientes>
