@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<clientes><cliente codigo="1" nome="Guilherme Pires" cartao="12341212" ativo="1"/><cliente codigo="2" nome="Teste" cartao="124" ativo="1"/><cliente codigo="3" nome="Jose 123" cartao="13" ativo="0"/></clientes>

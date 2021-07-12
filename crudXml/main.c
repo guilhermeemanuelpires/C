@@ -21,7 +21,7 @@
     xmlNodePtr cur = NULL;
 
     //** FORMS **//
-    newtComponent frm, frmCadastro;
+    newtComponent frm, frmCadastro, frmMsg;
     newtGrid grid;
 
     //** BUTTONS **//
@@ -39,7 +39,9 @@
     //** LIST BOX **//
     newtComponent lbPessoa;
 
-    const char *id, *nome, *cartao;
+    char bfId[32], bfNome[100], bfCartao[32];
+
+    char *id, *nome, *cartao;
     char ativo;
 
     int l = 0;
@@ -48,6 +50,8 @@
     void createFrmPrincpial();
     void createFrmCadastro();
     void AddCliente();
+    void EditaCliente();
+    void SaveEditCliente();
     void DeleteCliente();
     int LoadToClienteXml();
     void SaveToXml();
@@ -79,18 +83,66 @@ int main(void){
         newtFormRun(frm , &es);
 
         if(es.u.co == btnCadastrar){
+
+            int  SeqID = GetSeqCodigo();
+            sprintf(&bfId[0], "%i", SeqID);
+            sprintf(&bfNome[0], "%s", "");
+            sprintf(&bfCartao[0], "%s", "");
+            
             createFrmCadastro();
-            newtFormRun(frmCadastro, &es2);    
-            if (es2.u.co == btnSalvar){
-                AddCliente();
-            }
+
+            int controll = 1;
+            do{
+                newtRefresh();    
+                newtFormRun(frmCadastro, &es2);
+                if (es2.u.co == btnSalvar){
+                    if (strlen(nome) <= 0 ){
+                        newtWinMessage("Atencao", "Ok", "Campo Nome eh obrigatorio!");
+                        controll = 1;
+                    }else if(strlen(cartao) <= 0){
+                        newtWinMessage("Atencao", "Ok", "Campo Cartao eh obrigatorio!");
+                        controll = 1;
+                    }else{
+                        AddCliente();
+                        controll = 0;
+                    }
+
+                }else if (es2.u.co == btnCancelar){
+                    controll = 0;
+                }
+
+            }while(controll);
         }
 
         if( es.u.key == NEWT_KEY_DELETE){
             DeleteCliente();
+        }else if(es.u.key == NEWT_KEY_RIGHT){
+            EditaCliente();
+            createFrmCadastro();
+            int controll = 1;
+            do{
+                newtRefresh();    
+                newtFormRun(frmCadastro, &es2);
+                if (es2.u.co == btnSalvar){
+                    if (strlen(nome) <= 0 ){
+                        newtWinMessage("Atencao", "Ok", "Campo Nome eh obrigatorio!");
+                        controll = 1;
+                    }else if(strlen(cartao) <= 0){
+                        newtWinMessage("Atencao", "Ok", "Campo Cartao eh obrigatorio!");
+                        controll = 1;
+                    }else{
+                        SaveEditCliente();
+                        controll = 0;
+                    }
+                }else if (es2.u.co == btnCancelar){
+                    controll = 0;
+                }
+
+            }while(controll);
+
         }
 
-    } while (es.reason != NEWT_EXIT_COMPONENT || es.u.co != btnSair);
+    } while (es.u.co != btnSair);
     
     newtPopWindow();
     newtFinished();
@@ -118,12 +170,13 @@ void createFrmPrincpial(){
                           lbPessoa,
                           NULL);
 
-    newtFormAddHotKey(frm,NEWT_KEY_DELETE); 
+    newtFormAddHotKey(frm,NEWT_KEY_DELETE);
+    newtFormAddHotKey(frm,NEWT_KEY_RIGHT);
     
 }
 
 void createFrmCadastro(){
-    newtOpenWindow(10, 5, 50, 16, "Cadastro de Usuario");
+    newtOpenWindow(10, 5, 50, 16, "Cadastro de Usuario");   
     frmCadastro = newtForm(NULL, "Formulario de Usuario", 0);
 
     lCod = newtLabel(6, 1, "Cod...:");
@@ -131,9 +184,9 @@ void createFrmCadastro(){
     lCartao = newtLabel(6, 3, "Cartao:");
     lAtivo = newtLabel(6, 4, "Ativo.:");
 
-    edtCod = newtEntry(14, 1, "1", 20, &id, NEWT_FLAG_DISABLED);
-    edtNome = newtEntry(14, 2, "", 20, &nome, 0);
-    edtcartao = newtEntry(14, 3, "", 20, &cartao, 0);
+    edtCod = newtEntry(14, 1, &bfId[0], 20, (const char **) &id, NEWT_FLAG_DISABLED);
+    edtNome = newtEntry(14, 2, &bfNome[0], 20, (const char **) &nome, 0);
+    edtcartao = newtEntry(14, 3, &bfCartao[0], 20, (const char **) &cartao, 0);
     ckbAtivo = newtCheckbox(14, 4, "", ' ', NULL, &ativo);
 
     btnSalvar = newtButton(15, 10, "Salvar");
@@ -170,8 +223,8 @@ int CreateOrOpenFileClienteXml(){
 
 void AddCliente(){
 
-
-    int SeqID  = GetSeqCodigo();
+    int SeqID = GetSeqCodigo();
+    sprintf(&bfId[0], "%i", SeqID);
 
     new = malloc(sizeof(struct cliente));
     memset(new, '\0', sizeof(struct cliente));
@@ -196,13 +249,48 @@ void AddCliente(){
     }
 
     LaodListbox();
-    
+
     SaveToXml();
 }
 
-int CheckFinal(){
-    return 1;
-};
+void EditaCliente(){
+    
+    const int idDell = (int)(long) newtListboxGetCurrent(lbPessoa);
+    
+    for(new = list; new; new = new->next){
+        if(new->codigo == idDell){
+            sprintf(&bfId[0], "%i", new->codigo);
+            sprintf(&bfNome[0], "%s", new->nome);
+            sprintf(&bfCartao[0], "%lu", new->cartao);
+
+            if (new->cartao == 1){
+                ativo = ativo;
+            }
+
+            // break;
+        }
+    }
+}
+
+void SaveEditCliente(){
+    for(new = list; new; new = new->next){
+        if(new->codigo == atoi(id)){
+            new->nome   = strdup(nome);
+            new->cartao = atol(cartao);
+
+            if (ativo == '*'){
+                new->ativo  = atoi("1");
+            }else{
+                new->ativo  = atoi("0");
+            }
+
+        }
+    }
+
+    LaodListbox();
+    
+    SaveToXml();
+}
 
 int GetSeqCodigo(){
     // Retorna sempre o maior sequencial da estrutura para gerar codigo
@@ -258,7 +346,6 @@ int LoadToClienteXml(){
     
     list = last = NULL;
     
-
     if(doc){
 
         cur = xmlDocGetRootElement(doc);
@@ -269,8 +356,6 @@ int LoadToClienteXml(){
             if(cur->type == XML_ELEMENT_NODE){    
                 new = malloc(sizeof(struct cliente));
                 memset(new, '\0', sizeof(struct cliente));
-
-                //new = list + l;
 
                 if(!list){
                     list = new;
@@ -338,7 +423,6 @@ void SaveToXml(){
 
     xmlSaveFileEnc(FILE_NAME,doc,"ISO-8859-1");
 }
-
 
 xmlNodePtr createRoot(xmlDocPtr doc, char* name)
 {
